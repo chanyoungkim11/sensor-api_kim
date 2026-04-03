@@ -1,5 +1,5 @@
 📡 Sensor to Web IoT Project
-Project Overview
+📌 Project Overview
 
 This project is about building a simple end-to-end IoT system that collects sensor data using an ESP32 and displays it on a web dashboard.
 
@@ -16,25 +16,26 @@ Originally, this project was planned to use a DHT sensor (DHT11/DHT22) to measur
 
 However, during implementation, the DHT11 sensor did not work reliably, so I decided to change the approach instead of spending too much time debugging hardware issues.
 
-What I changed:
+✔️ Changes made
 Temperature and humidity values are now simulated in code
 Added other sensors to collect actual input data
 
-This allowed me to continue working on the main goal of the project, which is the data pipeline and system integration, rather than focusing only on one sensor.
+This allowed me to continue focusing on the main goal of the project:
+👉 building the data pipeline and system integration
 
 📊 Data Collection
 
 The system now uses a mix of simulated and real sensor data.
 
-Simulated Data
+🔹 Simulated Data
 Temperature (°C)
 Humidity (%)
 
-These values are generated in a way that changes slowly over time so they behave similar to real sensor readings.
+These values are generated in a way that changes slowly over time so they behave similarly to real sensor readings.
 
-Real Sensor Data
+🔹 Real Sensor Data
 
-I used the following sensors:
+The following sensors are used:
 
 Light Sensor (Digital)
 → detects light / dark (0 or 1)
@@ -43,9 +44,9 @@ Obstacle Avoidance Sensor
 Potentiometer
 → provides continuous analog values (0 ~ 4095)
 📡 Data Transmission
-ESP32 sends data every ~60 seconds
-Uses WiFi + HTTP POST
-Data is formatted as JSON
+Data is sent from ESP32 every ~60 seconds
+Communication uses WiFi + HTTP POST
+Data format is JSON
 🔧 Hardware
 ESP32 Dev Board
 Light sensor module
@@ -61,18 +62,19 @@ MongoDB
 Web Dashboard
 ⚙️ Backend (FastAPI)
 
-The backend handles:
+The backend is responsible for:
 
-Receiving data from ESP32
-Validating input
+Receiving sensor data from ESP32
+Validating incoming data
 Storing data in MongoDB
 Providing API endpoints for data retrieval
 
-I also plan to add simple authentication later.
+Additional improvement planned:
 
+Simple token-based authentication
 🗄️ Database (MongoDB)
 
-Each record looks like this:
+Each record is structured as:
 
 {
   "sensor_id": "esp32_01",
@@ -88,30 +90,38 @@ Each record looks like this:
 The dashboard will:
 
 Show latest sensor values
-Display graphs over time
-Allow simple data exploration
+Display historical data using charts
+Allow basic data exploration
 
-The main focus is making the data easy to understand.
+Focus:
 
-🎯 Goals
-Basic
-Send data from ESP32 → backend
+Clean UI
+Easy-to-read data
+🎯 Project Goals
+✅ Basic Goals
+Send data from ESP32 to backend
 Store data in database
-Retrieve and display data on web
-Stretch
-Real-time updates
-Multiple devices
-Docker deployment
-Cloud hosting
-CI/CD
+Retrieve data correctly
+Visualize data on web dashboard
+🚀 Stretch Goals
+Real-time updates (polling or WebSocket)
+Support multiple devices
+Docker-based deployment
+Cloud deployment (AWS / Azure / GCP)
+CI/CD with GitHub Actions
 🧠 What I Learned
 How ESP32 communicates over WiFi
 How to design a simple REST API
-How to store and query time-series data
+How to handle time-series data
 How different parts of a system connect together
-How to adjust a project when hardware doesn't work as expected
+How to adapt when hardware doesn’t work as expected
 💡 Note
 
 Even though I couldn’t use the actual temperature/humidity sensor, the project still achieves its main goal:
 
-→ building a working IoT data pipeline from device to web.
+👉 building a working IoT data pipeline from device to web.
+
+🎯 Summary
+
+👉 The sensors changed, but the core objective remained the same:
+building a complete IoT data pipeline.
