@@ -136,5 +136,6 @@ Even though I couldn’t use the actual temperature/humidity sensor, the project
 👉 building a working IoT data pipeline from device to web.
 
 🎯 Summary
+
 👉 The sensors changed, but the core objective remained the same:
 building a complete IoT data pipeline.
