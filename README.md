@@ -1,6 +1,7 @@
 📡 Sensor to Web IoT Project
 
 📌 Project Overview
+
 This project is about building a simple end-to-end IoT system that collects sensor data using an ESP32 and displays it on a web dashboard.
 
 The main goal is to understand how different parts of a real-world system connect together, including:
@@ -12,11 +13,13 @@ Database (MongoDB)
 Frontend visualization
 
 ⚠️ Project Adjustment
+
 Originally, this project was planned to use a DHT sensor (DHT11/DHT22) to measure temperature and humidity.
 
 However, during implementation, the DHT11 sensor did not work reliably, so I decided to change the approach instead of spending too much time debugging hardware issues.
 
 ✔️ Changes made
+
 Temperature and humidity values are now simulated in code
 Added other sensors to collect actual input data
 
@@ -24,6 +27,7 @@ This allowed me to continue focusing on the main goal of the project:
 👉 building the data pipeline and system integration
 
 📊 Data Collection
+
 The system now uses a mix of simulated and real sensor data.
 
 🔹 Simulated Data
@@ -53,6 +57,7 @@ Obstacle avoidance module
 Potentiometer
 
 🏗️ System Architecture
+
 ESP32 (Sensors)
     ↓
 FastAPI Backend
@@ -62,6 +67,7 @@ MongoDB
 Web Dashboard
 
 ⚙️ Backend (FastAPI)
+
 The backend is responsible for:
 
 Receiving sensor data from ESP32
@@ -74,6 +80,7 @@ Additional improvement planned:
 Simple token-based authentication
 
 🗄️ Database (MongoDB)
+
 Each record is structured as:
 
 {
@@ -87,6 +94,7 @@ Each record is structured as:
 }
 
 📊 Web Dashboard
+
 The dashboard will:
 
 Show latest sensor values
@@ -99,18 +107,22 @@ Clean UI
 Easy-to-read data
 
 🎯 Project Goals
+
 ✅ Basic Goals
+
 Send data from ESP32 to backend
 Store data in database
 Retrieve data correctly
 Visualize data on web dashboard
 🚀 Stretch Goals
+
 Real-time updates (polling or WebSocket)
 Support multiple devices
 Docker-based deployment
 Cloud deployment (AWS / Azure / GCP)
 CI/CD with GitHub Actions
 🧠 What I Learned
+
 How ESP32 communicates over WiFi
 How to design a simple REST API
 How to handle time-series data
@@ -118,6 +130,7 @@ How different parts of a system connect together
 How to adapt when hardware doesn’t work as expected
 
 💡 Note
+
 Even though I couldn’t use the actual temperature/humidity sensor, the project still achieves its main goal:
 
 👉 building a working IoT data pipeline from device to web.
