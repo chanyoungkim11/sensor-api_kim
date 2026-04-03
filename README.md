@@ -1,139 +1,117 @@
-# Sensor to Web IoT Project
+📡 Sensor to Web IoT Project
+Project Overview
 
-## Project Overview
+This project is about building a simple end-to-end IoT system that collects sensor data using an ESP32 and displays it on a web dashboard.
 
-This project aims to design and implement a complete end-to-end Internet of Things (IoT) data pipeline that collects environmental sensor readings and presents them through a web-based dashboard.
+The main goal is to understand how different parts of a real-world system connect together, including:
 
-The goal of this project is to gain practical experience building a real-world system that integrates embedded hardware, network communication, backend API services, database storage, and frontend data visualization.
+Embedded device (ESP32)
+Network communication (WiFi + HTTP)
+Backend server (FastAPI)
+Database (MongoDB)
+Frontend visualization
+⚠️ Project Adjustment
 
-This type of architecture is commonly used in smart homes, environmental monitoring systems, industrial automation, and data logging platforms.
+Originally, this project was planned to use a DHT sensor (DHT11/DHT22) to measure temperature and humidity.
 
----
+However, during implementation, the DHT11 sensor did not work reliably, so I decided to change the approach instead of spending too much time debugging hardware issues.
 
-## Data Collection
+What I changed:
+Temperature and humidity values are now simulated in code
+Added other sensors to collect actual input data
 
-The system will collect environmental data including:
+This allowed me to continue working on the main goal of the project, which is the data pipeline and system integration, rather than focusing only on one sensor.
 
-- Temperature (°C)
-- Humidity (%)
+📊 Data Collection
 
-These measurements are useful for:
+The system now uses a mix of simulated and real sensor data.
 
-- Indoor climate monitoring
-- Smart building automation
-- Environmental trend analysis
-- Predictive control systems such as HVAC optimization
+Simulated Data
+Temperature (°C)
+Humidity (%)
 
-Sensor readings will be transmitted every **60 seconds** over WiFi using HTTP requests.
+These values are generated in a way that changes slowly over time so they behave similar to real sensor readings.
 
----
+Real Sensor Data
 
-## Hardware Plan
+I used the following sensors:
 
-The project will use the following hardware components:
-
-- **ESP32 Microcontroller**
-  - WiFi-enabled embedded development board
-  - Responsible for collecting sensor readings and transmitting data to the backend API
-
-- **DHT22 Temperature and Humidity Sensor**
-  - Digital sensor capable of measuring environmental temperature and humidity
-  - Suitable for indoor environmental monitoring applications
-
-The ESP32 will periodically read sensor values and send structured JSON data packets to the backend server.
-
----
-
-## System Architecture
-
-The system will follow a typical IoT data pipeline structure:
-Sensor Device (ESP32 + DHT22)
-        ↓
-REST API (FastAPI)
-        ↓
-MongoDB Database
-        ↓
+Light Sensor (Digital)
+→ detects light / dark (0 or 1)
+Obstacle Avoidance Sensor
+→ detects nearby objects (0 or 1)
+Potentiometer
+→ provides continuous analog values (0 ~ 4095)
+📡 Data Transmission
+ESP32 sends data every ~60 seconds
+Uses WiFi + HTTP POST
+Data is formatted as JSON
+🔧 Hardware
+ESP32 Dev Board
+Light sensor module
+Obstacle avoidance module
+Potentiometer
+🏗️ System Architecture
+ESP32 (Sensors)
+    ↓
+FastAPI Backend
+    ↓
+MongoDB
+    ↓
 Web Dashboard
+⚙️ Backend (FastAPI)
 
+The backend handles:
 
-This architecture reflects real production IoT deployments where edge devices communicate with cloud services for data storage and visualization.
+Receiving data from ESP32
+Validating input
+Storing data in MongoDB
+Providing API endpoints for data retrieval
 
----
+I also plan to add simple authentication later.
 
-## Backend Design
+🗄️ Database (MongoDB)
 
-A RESTful backend service will be implemented using **FastAPI**.
+Each record looks like this:
 
-The backend will:
+{
+  "sensor_id": "esp32_01",
+  "temperature": 25.2,
+  "humidity": 60.8,
+  "light": 1,
+  "obstacle": 0,
+  "potentiometer": 2300,
+  "timestamp": "2026-04-03T12:00:00Z"
+}
+📊 Web Dashboard
 
-- Accept sensor readings via HTTP POST requests
-- Validate incoming data using Pydantic schemas
-- Store time-series readings in a MongoDB database
-- Provide endpoints for retrieving historical data
-- Compute statistical summaries such as minimum, maximum, and average values
+The dashboard will:
 
-To improve system security, token-based authentication may be implemented to prevent unauthorized devices from submitting data.
+Show latest sensor values
+Display graphs over time
+Allow simple data exploration
 
----
+The main focus is making the data easy to understand.
 
-## Database Design
+🎯 Goals
+Basic
+Send data from ESP32 → backend
+Store data in database
+Retrieve and display data on web
+Stretch
+Real-time updates
+Multiple devices
+Docker deployment
+Cloud hosting
+CI/CD
+🧠 What I Learned
+How ESP32 communicates over WiFi
+How to design a simple REST API
+How to store and query time-series data
+How different parts of a system connect together
+How to adjust a project when hardware doesn't work as expected
+💡 Note
 
-MongoDB will be used to store sensor readings due to its flexibility and suitability for time-series data.
+Even though I couldn’t use the actual temperature/humidity sensor, the project still achieves its main goal:
 
-Each record will contain:
-
-- Sensor ID
-- Temperature
-- Humidity
-- Timestamp (UTC)
-- Optional location metadata
-
-Indexes will be configured to support efficient queries for recent readings and time-range filtering.
-
-An optional data retention policy may automatically delete records older than 30 days.
-
----
-
-## Web Dashboard
-
-A lightweight web dashboard will allow users to:
-
-- View the most recent sensor readings
-- Explore historical data trends through charts
-- Analyze environmental statistics over configurable time ranges
-- Monitor data from multiple sensors (future enhancement)
-
-The focus of the dashboard will be usability and clear data presentation.
-
----
-
-## Project Goals
-
-### Basic Goals
-
-- Sensor device successfully transmits data to the backend API over WiFi
-- Backend validates and stores incoming readings
-- Database queries return correct historical results
-- Dashboard visualizes recent and past sensor data
-
-### Stretch Goals
-
-- Real-time data updates using polling or WebSockets
-- Support for multiple sensor devices
-- Deployment of backend services using Docker containers
-- Cloud hosting on platforms such as AWS, Azure, or GCP
-- Continuous integration and deployment using GitHub Actions
-- Secure token-based data submission
-
----
-
-## Expected Learning Outcomes
-
-Through this project I aim to develop practical skills in:
-
-- Embedded device networking and IoT communication
-- REST API design and implementation
-- Time-series database management
-- Cloud deployment workflows
-- Full-stack system integration
-- Real-world software architecture design
+→ building a working IoT data pipeline from device to web.
