@@ -1,0 +1,47 @@
+#define LIGHT_PIN 27
+#define POT_PIN 34
+#define OBSTACLE_PIN 33
+
+float temperature = 25.0;
+float humidity = 60.0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LIGHT_PIN, INPUT);
+  pinMode(OBSTACLE_PIN, INPUT);
+
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  int light = digitalRead(LIGHT_PIN);
+  int obstacle = digitalRead(OBSTACLE_PIN);
+  int pot = analogRead(POT_PIN);
+
+  temperature += random(-2, 3) * 0.1;
+
+  humidity += random(-5, 6) * 0.1;
+
+  if (temperature < 20) temperature = 20;
+  if (temperature > 35) temperature = 35;
+
+  if (humidity < 30) humidity = 30;
+  if (humidity > 80) humidity = 80;
+
+  Serial.print("Light: ");
+  Serial.print(light);
+  Serial.print(" | Obstacle: ");
+  Serial.print(obstacle);
+  Serial.print(" | Pot: ");
+  Serial.print(pot);
+
+  Serial.print(" | Temp: ");
+  Serial.print(temperature);
+  Serial.print(" C");
+
+  Serial.print(" | Hum: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  delay(1000);
+}
