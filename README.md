@@ -1,6 +1,6 @@
 📡 Sensor to Web IoT Project
-📌 Project Overview
 
+📌 Project Overview
 This project is about building a simple end-to-end IoT system that collects sensor data using an ESP32 and displays it on a web dashboard.
 
 The main goal is to understand how different parts of a real-world system connect together, including:
@@ -10,8 +10,8 @@ Network communication (WiFi + HTTP)
 Backend server (FastAPI)
 Database (MongoDB)
 Frontend visualization
-⚠️ Project Adjustment
 
+⚠️ Project Adjustment
 Originally, this project was planned to use a DHT sensor (DHT11/DHT22) to measure temperature and humidity.
 
 However, during implementation, the DHT11 sensor did not work reliably, so I decided to change the approach instead of spending too much time debugging hardware issues.
@@ -24,7 +24,6 @@ This allowed me to continue focusing on the main goal of the project:
 👉 building the data pipeline and system integration
 
 📊 Data Collection
-
 The system now uses a mix of simulated and real sensor data.
 
 🔹 Simulated Data
@@ -52,6 +51,7 @@ ESP32 Dev Board
 Light sensor module
 Obstacle avoidance module
 Potentiometer
+
 🏗️ System Architecture
 ESP32 (Sensors)
     ↓
@@ -60,8 +60,8 @@ FastAPI Backend
 MongoDB
     ↓
 Web Dashboard
-⚙️ Backend (FastAPI)
 
+⚙️ Backend (FastAPI)
 The backend is responsible for:
 
 Receiving sensor data from ESP32
@@ -72,8 +72,8 @@ Providing API endpoints for data retrieval
 Additional improvement planned:
 
 Simple token-based authentication
-🗄️ Database (MongoDB)
 
+🗄️ Database (MongoDB)
 Each record is structured as:
 
 {
@@ -85,8 +85,8 @@ Each record is structured as:
   "potentiometer": 2300,
   "timestamp": "2026-04-03T12:00:00Z"
 }
-📊 Web Dashboard
 
+📊 Web Dashboard
 The dashboard will:
 
 Show latest sensor values
@@ -97,6 +97,7 @@ Focus:
 
 Clean UI
 Easy-to-read data
+
 🎯 Project Goals
 ✅ Basic Goals
 Send data from ESP32 to backend
@@ -115,13 +116,12 @@ How to design a simple REST API
 How to handle time-series data
 How different parts of a system connect together
 How to adapt when hardware doesn’t work as expected
-💡 Note
 
+💡 Note
 Even though I couldn’t use the actual temperature/humidity sensor, the project still achieves its main goal:
 
 👉 building a working IoT data pipeline from device to web.
 
 🎯 Summary
-
 👉 The sensors changed, but the core objective remained the same:
 building a complete IoT data pipeline.
