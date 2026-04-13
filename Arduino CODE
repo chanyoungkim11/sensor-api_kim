@@ -1,47 +1,77 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+
 #define LIGHT_PIN 27
 #define POT_PIN 34
 #define OBSTACLE_PIN 33
+
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* serverUrl = "http://YOUR_SERVER_IP:8000/readings";
 
 float temperature = 25.0;
 float humidity = 60.0;
 
 void setup() {
   Serial.begin(115200);
+
   pinMode(LIGHT_PIN, INPUT);
   pinMode(OBSTACLE_PIN, INPUT);
 
-  randomSeed(analogRead(0));
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  randomSeed(micros());
 }
 
 void loop() {
-  int light = digitalRead(LIGHT_PIN);
-  int obstacle = digitalRead(OBSTACLE_PIN);
-  int pot = analogRead(POT_PIN);
+  if (WiFi.status() == WL_CONNECTED) {
+    int light = digitalRead(LIGHT_PIN);
+    int obstacle = digitalRead(OBSTACLE_PIN);
+    int pot = analogRead(POT_PIN);
 
-  temperature += random(-2, 3) * 0.1;
+    temperature += random(-2, 3) * 0.1;
+    humidity += random(-5, 6) * 0.1;
 
-  humidity += random(-5, 6) * 0.1;
+    if (temperature < 20.0) temperature = 20.0;
+    if (temperature > 35.0) temperature = 35.0;
+    if (humidity < 30.0) humidity = 30.0;
+    if (humidity > 80.0) humidity = 80.0;
 
-  if (temperature < 20) temperature = 20;
-  if (temperature > 35) temperature = 35;
+    String jsonData = "{";
+    jsonData += "\"sensor_id\":\"esp32_01\",";
+    jsonData += "\"temperature\":" + String(temperature, 1) + ",";
+    jsonData += "\"humidity\":" + String(humidity, 1) + ",";
+    jsonData += "\"light\":" + String(light) + ",";
+    jsonData += "\"obstacle\":" + String(obstacle) + ",";
+    jsonData += "\"potentiometer\":" + String(pot);
+    jsonData += "}";
 
-  if (humidity < 30) humidity = 30;
-  if (humidity > 80) humidity = 80;
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
 
-  Serial.print("Light: ");
-  Serial.print(light);
-  Serial.print(" | Obstacle: ");
-  Serial.print(obstacle);
-  Serial.print(" | Pot: ");
-  Serial.print(pot);
+    int httpResponseCode = http.POST(jsonData);
+    String response = http.getString();
 
-  Serial.print(" | Temp: ");
-  Serial.print(temperature);
-  Serial.print(" C");
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    Serial.println(response);
 
-  Serial.print(" | Hum: ");
-  Serial.print(humidity);
-  Serial.println(" %");
+    http.end();
+  } else {
+    Serial.println("WiFi disconnected");
+  }
 
-  delay(1000);
+  delay(60000);
 }
