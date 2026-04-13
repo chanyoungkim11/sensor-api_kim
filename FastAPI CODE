@@ -1,0 +1,26 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+from datetime import datetime
+
+app = FastAPI()
+
+class SensorData(BaseModel):
+    sensor_id: str
+    temperature: float
+    humidity: float
+    light: int
+    obstacle: int
+    potentiometer: int
+
+@app.get("/")
+def root():
+    return {"message": "Server is running"}
+
+@app.post("/readings")
+def receive_data(data: SensorData):
+    return {
+        "message": "data received",
+        "data": data,
+        "timestamp": datetime.utcnow().isoformat(),
+        "note": "MongoDB integration is currently in progress"
+    }
