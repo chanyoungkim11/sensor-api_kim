@@ -5,12 +5,35 @@
 #define POT_PIN 34
 #define OBSTACLE_PIN 33
 
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
-const char* serverUrl = "http://YOUR_SERVER_IP:8000/readings";
+const char* ssid = "iPhone";
+const char* password = "19711217";
+const char* serverUrl = "http://172.20.10.2:8000/readings";
+const char* apiToken = "my-secret-token";
 
 float temperature = 25.0;
 float humidity = 60.0;
+
+void connectWiFi() {
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+
+  int retry = 0;
+  while (WiFi.status() != WL_CONNECTED && retry < 30) {
+    delay(500);
+    Serial.print(".");
+    retry++;
+  }
+
+  Serial.println();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi connected");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("WiFi connection failed");
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -18,23 +41,19 @@ void setup() {
   pinMode(LIGHT_PIN, INPUT);
   pinMode(OBSTACLE_PIN, INPUT);
 
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println();
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
   randomSeed(micros());
+
+  connectWiFi();
 }
 
 void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected, reconnecting...");
+    WiFi.disconnect();
+    delay(1000);
+    connectWiFi();
+  }
+
   if (WiFi.status() == WL_CONNECTED) {
     int light = digitalRead(LIGHT_PIN);
     int obstacle = digitalRead(OBSTACLE_PIN);
@@ -57,21 +76,31 @@ void loop() {
     jsonData += "\"potentiometer\":" + String(pot);
     jsonData += "}";
 
+    Serial.println("Sending JSON:");
+    Serial.println(jsonData);
+
+    WiFiClient client;
     HTTPClient http;
-    http.begin(serverUrl);
+
+    http.begin(client, serverUrl);
     http.addHeader("Content-Type", "application/json");
+    http.addHeader("Authorization", String("Bearer ") + apiToken);
 
     int httpResponseCode = http.POST(jsonData);
-    String response = http.getString();
 
     Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
-    Serial.println(response);
+
+    if (httpResponseCode > 0) {
+      String response = http.getString();
+      Serial.println("Server response:");
+      Serial.println(response);
+    } else {
+      Serial.println("HTTP request failed");
+    }
 
     http.end();
-  } else {
-    Serial.println("WiFi disconnected");
   }
 
-  delay(60000);
+  delay(10000);
 }
