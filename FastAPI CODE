@@ -1,8 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from datetime import datetime
+from pymongo import MongoClient
 
 app = FastAPI()
+
+API_TOKEN = "my-secret-token"
+
+client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
+db = client["sensor_to_web_iot"]
+collection = db["readings"]
 
 class SensorData(BaseModel):
     sensor_id: str
@@ -17,10 +25,46 @@ def root():
     return {"message": "Server is running"}
 
 @app.post("/readings")
-def receive_data(data: SensorData):
-    return {
-        "message": "data received",
-        "data": data,
-        "timestamp": datetime.utcnow().isoformat(),
-        "note": "MongoDB integration is currently in progress"
+def receive_data(data: SensorData, authorization: str = Header(None)):
+    if authorization != f"Bearer {API_TOKEN}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    document = {
+        "sensor_id": data.sensor_id,
+        "temperature": data.temperature,
+        "humidity": data.humidity,
+        "light": data.light,
+        "obstacle": data.obstacle,
+        "potentiometer": data.potentiometer,
+        "timestamp": datetime.utcnow()
     }
+
+    result = collection.insert_one(document)
+
+    return {
+        "message": "data saved",
+        "inserted_id": str(result.inserted_id)
+    }
+
+@app.get("/readings/latest")
+def get_latest_reading():
+    latest = collection.find_one(sort=[("timestamp", -1)])
+
+    if latest:
+        latest["_id"] = str(latest["_id"])
+        return latest
+
+    return {"message": "no data found"}
+
+@app.get("/readings/recent")
+def get_recent_readings(limit: int = 20):
+    readings = list(
+        collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit)
+    )
+    readings.reverse()
+    return readings
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    with open("dashboard.html", "r", encoding="utf-8") as f:
+        return f.read()
