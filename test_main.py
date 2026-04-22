@@ -3,7 +3,7 @@ from main import app
 
 client = TestClient(app)
 
-API_TOKEN = "my-secret-token"
+API_TOKEN = ""
 
 def test_root():
     response = client.get("/")
