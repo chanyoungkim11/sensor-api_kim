@@ -1,77 +1,226 @@
 # Testing Specification
 
-## Objective
+## 1. Overview
 
-Ensure that the entire IoT pipeline works correctly from sensor input to dashboard visualization.
+This document defines the testing strategy for the Sensor to Web IoT system.
 
----
+The purpose of testing is to verify:
 
-## Test Cases
+* API functionality
+* Authentication logic
+* Data validation
+* Endpoint reliability
 
-### 1. WiFi Connection
-
-- ESP32 connects successfully
-- IP address is assigned
-
-Expected result:
-Device prints a valid IP address in the serial monitor.
+Testing is implemented using pytest and FastAPI TestClient.
 
 ---
 
-### 2. API Communication
+## 2. Testing Tools
 
-- ESP32 sends an HTTP POST request to the backend
+Frameworks and libraries:
 
-Expected result:
-HTTP response code is 200.
-
----
-
-### 3. Authentication
-
-- Valid token → success
-- Invalid token → failure
-
-Expected result:
-Invalid or missing token returns 401 Unauthorized.
+* pytest
+* fastapi.testclient (TestClient)
+* httpx (dependency for TestClient)
 
 ---
 
-### 4. Database Storage
+## 3. Test Environment
 
-- Data is stored in MongoDB
+* Backend: FastAPI (main.py)
+* Database: MongoDB (local Docker instance)
+* Environment variables loaded via .env
 
-Expected result:
-A new document appears in the `readings` collection after a valid POST request.
+Tests are run locally using:
 
----
-
-### 5. Data Retrieval
-
-Test endpoints:
-
-- `/readings/latest`
-- `/readings/recent`
-
-Expected result:
-Returned data matches values previously sent by the ESP32.
+pytest
 
 ---
 
-### 6. Dashboard
-
-- Latest sensor values are displayed correctly
-- Temperature and humidity charts render correctly
-- Dashboard updates when new data is stored
-
-Expected result:
-The dashboard reflects real-time or recent sensor data accurately.
+## 4. Test Cases
 
 ---
 
-## Expected Outcome
+### 4.1 Test: Root Endpoint
 
-- All components communicate correctly
-- Data is stored and retrieved accurately
-- The dashboard displays sensor information clearly
-- Token protection prevents unauthorized data submission
+#### Objective
+
+Verify that the server is running.
+
+#### Request
+
+GET /
+
+#### Expected Result
+
+* Status code: 200
+* Response contains message
+
+---
+
+### 4.2 Test: Unauthorized POST Request
+
+#### Objective
+
+Ensure that requests without a token are rejected.
+
+#### Request
+
+POST /readings (without Authorization header)
+
+#### Expected Result
+
+* Status code: 401 Unauthorized
+
+---
+
+### 4.3 Test: Authorized POST Request
+
+#### Objective
+
+Verify that valid data is accepted and stored.
+
+#### Request
+
+POST /readings with:
+
+* Valid JSON payload
+* Valid Authorization header
+
+#### Expected Result
+
+* Status code: 200
+* Response contains "data saved"
+
+---
+
+### 4.4 Test: Get Latest Reading
+
+#### Objective
+
+Verify retrieval of the most recent sensor data.
+
+#### Request
+
+GET /readings/latest
+
+#### Expected Result
+
+* Status code: 200
+* Response contains latest data or message
+
+---
+
+### 4.5 Test: Get Recent Readings
+
+#### Objective
+
+Verify retrieval of multiple recent records.
+
+#### Request
+
+GET /readings/recent
+
+#### Expected Result
+
+* Status code: 200
+* Response is a list of readings
+
+---
+
+## 5. Sample Test Code
+
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+API_TOKEN = "my-secret-token"
+
+def test_root():
+response = client.get("/")
+assert response.status_code == 200
+
+def test_post_readings_unauthorized():
+data = {
+"sensor_id": "test_device",
+"temperature": 25.0,
+"humidity": 60.0,
+"light": 1,
+"obstacle": 0,
+"potentiometer": 100
+}
+
+```
+response = client.post("/readings", json=data)
+assert response.status_code == 401
+```
+
+def test_post_readings_authorized():
+data = {
+"sensor_id": "test_device",
+"temperature": 25.0,
+"humidity": 60.0,
+"light": 1,
+"obstacle": 0,
+"potentiometer": 100
+}
+
+```
+headers = {
+    "Authorization": f"Bearer {API_TOKEN}"
+}
+
+response = client.post("/readings", json=data, headers=headers)
+assert response.status_code == 200
+```
+
+def test_get_latest():
+response = client.get("/readings/latest")
+assert response.status_code == 200
+
+def test_get_recent():
+response = client.get("/readings/recent")
+assert response.status_code == 200
+
+---
+
+## 6. Test Coverage
+
+The following features are covered:
+
+* Server availability
+* Authentication logic
+* Data submission
+* Data retrieval
+* API response validation
+
+---
+
+## 7. Error Handling Tests
+
+Potential additional tests:
+
+* Invalid JSON format
+* Missing fields
+* Wrong data types
+* Invalid token format
+
+---
+
+## 8. Limitations
+
+* Tests rely on local MongoDB instance
+* No mocking of database
+* No performance testing
+
+---
+
+## 9. Future Improvements
+
+* Add database mocking
+* Add integration tests
+* Add load testing
+* Automate tests with CI/CD (GitHub Actions)
+
+---
