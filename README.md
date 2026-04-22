@@ -1,216 +1,293 @@
-# 📡 Sensor to Web IoT Project
+# Sensor to Web IoT Project
 
-## 📌 Project Overview
+## Project Overview
 
-This project implements a complete end-to-end IoT data pipeline using an ESP32 device and a web-based dashboard.
+This project implements a complete end-to-end IoT data pipeline using an ESP32 and a web-based dashboard.
 
-The system collects sensor data, sends it over WiFi, processes it through a backend API, stores it in a database, and visualizes it in a browser.
+The system collects sensor data from embedded hardware, sends the data over WiFi using HTTP requests, stores the readings in MongoDB, and visualizes them on a real-time dashboard.
 
-The goal is to understand how real-world systems integrate:
-
-- Embedded devices (ESP32)
-- Network communication (WiFi + HTTP)
-- Backend services (FastAPI)
-- Database storage (MongoDB)
-- Frontend visualization (Dashboard)
+This architecture reflects real-world IoT systems used in smart homes, environmental monitoring, and industrial automation.
 
 ---
 
-## ⚠️ Project Adjustment
+## Final Project Scope
 
-Originally, this project planned to use a DHT11 temperature and humidity sensor.
+The original plan was to use a DHT11 sensor for temperature and humidity.
 
-However, due to unreliable hardware behavior, the sensor was removed and replaced with simulated values.
+However, due to hardware issues, the DHT11 sensor did not function reliably. Instead of stopping the project, the system was adjusted to ensure full pipeline completion.
 
-### Changes made
+### Final Implementation
 
-- Temperature and humidity are simulated in code
-- Additional sensors were used for real data collection
+Simulated Data:
 
-### Sensors used
+* Temperature
+* Humidity
 
-- Light Sensor (digital)
-- Obstacle Avoidance Sensor (digital)
-- Potentiometer (analog)
+Real Sensor Data:
 
-This allowed the project to continue focusing on the main objective:
+* Light sensor
+* Obstacle sensor
+* Potentiometer
 
-👉 building a complete IoT data pipeline
-
----
-
-## 📊 Data Collection
-
-### Simulated Data
-
-- Temperature (°C)
-- Humidity (%)
-
-These values change gradually over time to mimic real sensor behavior.
-
-### Real Sensor Data
-
-- Light → 0 or 1
-- Obstacle → 0 or 1
-- Potentiometer → 0 ~ 4095
+This approach preserved the main objective:
+**building a fully working sensor-to-web IoT pipeline**
 
 ---
 
-## 📡 Data Transmission
+## Data Description
 
-- ESP32 sends data via HTTP POST
-- Data format: JSON
-- Transmission interval: ~10 seconds
-- Token-based authentication included
+### Light Sensor
 
----
+* 1 = dark
+* 0 = light detected
 
-## 🔧 Hardware
+### Obstacle Sensor
 
-- ESP32 Development Board
-- Light Sensor Module
-- Obstacle Avoidance Module
-- Potentiometer
+* 0 = obstacle detected
+* 1 = clear
 
----
+### Potentiometer
 
-## 🏗️ System Architecture
-
-ESP32 (Sensors) → HTTP POST → FastAPI → MongoDB → Web Dashboard
+* Analog input range: 0–4095
 
 ---
 
-## ⚙️ Backend (FastAPI)
+## Hardware Used
 
-Responsibilities:
-
-- Receive sensor data from ESP32
-- Validate incoming data using Pydantic
-- Authenticate requests using token
-- Store data in MongoDB
-- Provide API endpoints for data retrieval
-
-### Endpoints
-
-- POST /readings
-- GET /readings/latest
-- GET /readings/recent
-- GET /dashboard
+* ESP32 Development Board
+* Light Sensor Module
+* Obstacle Detection Sensor
+* Potentiometer
+* Breadboard and jumper wires
 
 ---
 
-## 🔐 Authentication
+## System Architecture
 
-All POST requests require a token.
-
-Header format:
-
-Authorization: Bearer my-secret-token
-
-Unauthorized requests return:
-
-401 Unauthorized
+ESP32
+→ HTTP POST (WiFi)
+→ FastAPI Backend
+→ MongoDB
+→ Web Dashboard
 
 ---
 
-## 🗄️ Database (MongoDB)
+## Backend and Database
 
-Each record structure:
+### Backend (FastAPI)
 
-{
-  "sensor_id": "esp32_01",
-  "temperature": 25.2,
-  "humidity": 60.8,
-  "light": 1,
-  "obstacle": 0,
-  "potentiometer": 2300,
-  "timestamp": "2026-04-03T12:00:00Z"
-}
+Responsible for:
 
----
+* Receiving sensor data
+* Validating input using Pydantic
+* Token authentication
+* Storing data in MongoDB
+* Serving API endpoints
+* Serving dashboard UI
 
-## 📊 Web Dashboard
+### Database (MongoDB)
 
-The dashboard allows users to:
+Each document contains:
 
-- View latest sensor values
-- Visualize temperature and humidity trends
-- Monitor sensor activity
+* sensor_id
+* temperature
+* humidity
+* light
+* obstacle
+* potentiometer
+* timestamp
 
-Focus:
-
-- Clean UI
-- Real-time updates
-- Easy data interpretation
+MongoDB runs locally using Docker.
 
 ---
 
-## 🚀 How to Run
+## API Endpoints
 
-1. Start MongoDB (Docker)
+GET /
+→ Health check
 
-docker run -d --name sensor-mongo -p 27017:27017 mongo:latest
+POST /readings
+→ Submit sensor data (requires token)
 
-2. Start FastAPI Server
+GET /readings/latest
+→ Retrieve latest reading
+
+GET /readings/recent
+→ Retrieve recent readings
+
+GET /dashboard
+→ Dashboard UI
+
+---
+
+## Token Authentication
+
+The system uses Bearer Token authentication.
+
+* ESP32 includes a token in the request header
+* FastAPI validates the token before accepting data
+
+Sensitive data is stored in a `.env` file instead of hardcoded values.
+
+Example `.env`:
+
+API_TOKEN=my-secret-token
+MONGO_URI=mongodb://localhost:27017
+DB_NAME=sensor_to_web_iot
+COLLECTION_NAME=readings
+
+---
+
+## Docker Usage
+
+MongoDB is run via Docker:
+
+docker run -d --name sensor-mongo -p 27017:27017 mongo
+
+Future improvements:
+
+* Dockerize FastAPI backend
+* Use Docker Compose
+* Deploy to cloud (AWS, GCP, Azure)
+
+---
+
+## Dashboard Features
+
+* Real-time sensor display
+* Temperature trend chart
+* Humidity trend chart
+* Latest sensor values
+* Light & obstacle status labels
+* Manual refresh button
+* Auto-refresh toggle
+* Adjustable refresh interval
+* Adjustable data limit
+* Recent readings table
+
+---
+
+## Testing
+
+Testing is implemented using pytest.
+
+Test cases include:
+
+* Root endpoint
+* Unauthorized POST request
+* Authorized POST request
+* Latest data retrieval
+* Recent data retrieval
+
+---
+
+## Specification Files
+
+Included specification documents:
+
+* system_spec.md
+* api_spec.md
+* data_model.md
+* testing_spec.md
+
+These define:
+
+* System behavior
+* API structure
+* Data models
+* Testing strategy
+
+---
+
+## Running the Project
+
+### 1. Start MongoDB
+
+docker run -d --name sensor-mongo -p 27017:27017 mongo
+
+### 2. Create .env file
+
+API_TOKEN=my-secret-token
+MONGO_URI=mongodb://localhost:27017
+DB_NAME=sensor_to_web_iot
+COLLECTION_NAME=readings
+
+### 3. Install dependencies
+
+pip install -r requirements.txt
+
+### 4. Run FastAPI server
 
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-3. Upload ESP32 Code
+### 5. Open dashboard
 
-- Set WiFi credentials
-- Set server IP (your computer IP)
-- Upload using Arduino IDE
+http://YOUR_LOCAL_IP:8000/dashboard
 
-4. Open Dashboard
+### 6. Upload ESP32 code
 
-http://<YOUR_IP>:8000/dashboard
-
----
-
-## 🧪 Testing
-
-- WiFi connection verified
-- API POST returns 200 OK
-- Invalid token returns 401
-- Data successfully stored in MongoDB
-- Dashboard displays real-time data
+* Set WiFi credentials
+* Set server URL
+* Set API token
+* Upload to ESP32
+* Monitor serial output
 
 ---
 
-## 🎯 Project Goals
+## Project Goals
 
 ### Basic Goals
 
-- Send data from ESP32 to backend
-- Store data in database
-- Retrieve data correctly
-- Display data on dashboard
+* Sensor-to-API communication
+* Data storage in database
+* Dashboard visualization
+* Token-based security
 
 ### Stretch Goals
 
-- Real-time updates (WebSocket)
-- Multi-device support
-- Dockerized backend
-- Cloud deployment (AWS / Azure / GCP)
-- CI/CD pipeline (GitHub Actions)
+* Full Docker setup
+* Cloud deployment
+* Multi-device support
+* Real sensor integration
 
 ---
 
-## 🧠 What I Learned
+## What I Learned
 
-- ESP32 WiFi communication
-- REST API design with FastAPI
-- MongoDB for time-series data
-- Full-stack system integration
-- Debugging real hardware issues
-- Adapting system design when hardware fails
+* ESP32 networking and HTTP requests
+* FastAPI backend development
+* MongoDB data storage
+* Token-based authentication
+* Frontend dashboard design
+* API testing with pytest
+* Handling hardware failures
 
 ---
 
-## 💡 Summary
+## Challenges
 
-Even though the original temperature/humidity sensor was replaced, the project successfully achieves its core objective:
+The DHT11 sensor did not function correctly.
 
-👉 building a complete IoT data pipeline from device to web
+Solution:
 
-The system demonstrates how real-world IoT applications collect, transmit, store, and visualize data in an integrated architecture.
+* Simulated temperature and humidity
+* Continued development with working sensors
+
+This ensured that the full system could still be completed.
+
+---
+
+## Final Result
+
+The completed system includes:
+
+* ESP32 data transmission
+* FastAPI backend
+* MongoDB storage
+* Real-time dashboard
+* Token authentication
+* API testing
+
+Even with hardware limitations, the full IoT pipeline was successfully implemented.
+
+---
