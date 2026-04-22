@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESP32 Sensor Dashboard -KIM</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #14213d;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+
+      --temp: #ef4444;
+      --temp-soft: #fee2e2;
+
+      --hum: #3b82f6;
+      --hum-soft: #dbeafe;
+
+      --light: #f59e0b;
+      --light-soft: #fef3c7;
+
+      --obs: #8b5cf6;
+      --obs-soft: #ede9fe;
+
+      --pot: #22c55e;
+      --pot-soft: #dcfce7;
+
+      --navy: #172554;
+      --table-head: #f8fafc;
+      --slate-soft: #eef2ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #edf3ff 0%, var(--bg) 180px);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .title-card,
+    .time-card {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 24px 26px;
+    }
+
+    .title-card h1 {
+      margin: 0;
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--navy);
+    }
+
+    .title-card .kim {
+      color: #6366f1;
+    }
+
+    .time-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .time-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .time-icon {
+      font-size: 32px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .time-meta {
+      min-width: 0;
+    }
+
+    .time-meta .label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .time-meta .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #e8f9ee;
+      color: #16a34a;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #16a34a;
+    }
+
+    .controls-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select,
+    button {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--navy);
+      color: white;
+      border: none;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 48px;
+      padding: 0 6px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 30px;
+      background: #d1d5db;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch.active {
+      background: #22c55e;
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .toggle-switch.active .toggle-knob {
+      left: 25px;
+    }
+
+    .toggle-text {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      bottom: -18px;
+      left: -10px;
+      width: 120%;
+      height: 50px;
+      opacity: 0.22;
+      border-radius: 40% 60% 40% 60% / 55% 45% 55% 45%;
+    }
+
+    .stat-card.temp::after { background: var(--temp-soft); }
+    .stat-card.hum::after { background: var(--hum-soft); }
+    .stat-card.light::after { background: var(--light-soft); }
+    .stat-card.obs::after { background: var(--obs-soft); }
+    .stat-card.pot::after { background: var(--pot-soft); }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .stat-icon {
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .badge.temp { background: var(--temp-soft); color: var(--temp); }
+    .badge.hum { background: var(--hum-soft); color: var(--hum); }
+    .badge.light { background: var(--light-soft); color: #d97706; }
+    .badge.obs { background: var(--obs-soft); color: var(--obs); }
+    .badge.pot { background: var(--pot-soft); color: #16a34a; }
+
+    .stat-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .stat-value {
+      font-size: 58px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+      color: var(--navy);
+    }
+
+    .stat-sub {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-header .icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--navy);
+    }
+
+    .chart-note {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .chart-wrap {
+      height: 320px;
+      position: relative;
+    }
+
+    .table-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .table-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .table-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .table-head .icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .table-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--navy);
+    }
+
+    .table-title span {
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      background: var(--table-head);
+      color: #475569;
+      text-align: left;
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    tbody td {
+      padding: 14px 14px;
+      border-bottom: 1px solid #eef2f7;
+      color: #334155;
+    }
+
+    tbody tr:hover {
+      background: #fafcff;
+    }
+
+    tbody tr.latest-row {
+      background: #f8fbff;
+      box-shadow: inset 4px 0 0 #6366f1;
+    }
+
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status-light-on {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .status-light-off {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .status-obs-detected {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-obs-clear {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    @media (max-width: 1250px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls-panel {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 18px;
+      }
+
+      .title-card h1 {
+        font-size: 28px;
+      }
+
+      .stats-grid,
+      .controls-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-value {
+        font-size: 48px;
+      }
+
+      .time-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .time-meta .value {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="topbar">
+      <div class="title-card">
+        <h1>ESP32 Sensor Dashboard <span class="kim">-KIM</span></h1>
+      </div>
+
+      <div class="time-card">
+        <div class="time-left">
+          <div class="time-icon">🕒</div>
+          <div class="time-meta">
+            <div class="label">Last Updated</div>
+            <div class="value" id="lastUpdated">--</div>
+          </div>
+        </div>
+        <div class="live-pill">
+          Live <span class="live-dot"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls-panel">
+      <div class="control-group">
+        <label for="refreshInterval">Refresh Interval</label>
+        <select id="refreshInterval">
+          <option value="1000">1 second</option>
+          <option value="2000">2 seconds</option>
+          <option value="5000">5 seconds</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="recordLimit">Chart Data Limit</label>
+        <select id="recordLimit">
+          <option value="10">10 records</option>
+          <option value="20" selected>20 records</option>
+          <option value="50">50 records</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Auto Refresh</label>
+        <div class="toggle-wrap">
+          <div class="toggle-switch active" id="autoRefreshToggle">
+            <div class="toggle-knob"></div>
+          </div>
+          <div class="toggle-text" id="autoRefreshText">ON</div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Manual Refresh</label>
+        <button id="refreshButton">Refresh Now</button>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card temp">
+        <div class="stat-top">
+          <div class="stat-icon">🌡️</div>
+          <div class="badge temp">Simulated</div>
+        </div>
+        <div class="stat-title">Temperature</div>
+        <div class="stat-value" id="temp">--</div>
+        <div class="stat-sub">Current temperature in °C</div>
+      </div>
+
+      <div class="stat-card hum">
+        <div class="stat-top">
+          <div class="stat-icon">💧</div>
+          <div class="badge hum">Simulated</div>
+        </div>
+        <div class="stat-title">Humidity</div>
+        <div class="stat-value" id="hum">--</div>
+        <div class="stat-sub">Current humidity in %</div>
+      </div>
+
+      <div class="stat-card light">
+        <div class="stat-top">
+          <div class="stat-icon">☀️</div>
+          <div class="badge light" id="lightBadge">--</div>
+        </div>
+        <div class="stat-title">Light</div>
+        <div class="stat-value" id="light">--</div>
+        <div class="stat-sub">1 = dark, 0 = light detected</div>
+      </div>
+
+      <div class="stat-card obs">
+        <div class="stat-top">
+          <div class="stat-icon">🎯</div>
+          <div class="badge obs" id="obstacleBadge">--</div>
+        </div>
+        <div class="stat-title">Obstacle</div>
+        <div class="stat-value" id="obstacle">--</div>
+        <div class="stat-sub">0 = obstacle detected, 1 = clear</div>
+      </div>
+
+      <div class="stat-card pot">
+        <div class="stat-top">
+          <div class="stat-icon">🎛️</div>
+          <div class="badge pot">Analog</div>
+        </div>
+        <div class="stat-title">Potentiometer</div>
+        <div class="stat-value" id="pot">--</div>
+        <div class="stat-sub">Analog input value</div>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-left">
+            <div class="icon">🌡️</div>
+            <h2 class="panel-title">Temperature Trend</h2>
+          </div>
+          <div class="chart-note" id="tempRangeNote">Recent records</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-left">
+            <div class="icon">💧</div>
+            <h2 class="panel-title">Humidity Trend</h2>
+          </div>
+          <div class="chart-note" id="humRangeNote">Recent records</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="humChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-panel">
+      <div class="table-head">
+        <div class="table-left">
+          <div class="icon">🕘</div>
+          <h2 class="table-title">Recent Readings <span>(Latest 10)</span></h2>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Temperature (°C)</th>
+              <th>Humidity (%)</th>
+              <th>Light</th>
+              <th>Obstacle</th>
+              <th>Potentiometer</th>
+            </tr>
+          </thead>
+          <tbody id="recentTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let tempChart;
+    let humChart;
+    let refreshTimer = null;
+    let autoRefreshEnabled = true;
+
+    const timeFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
+
+    function subtractFourHours(dateValue) {
+      const d = new Date(dateValue);
+      d.setHours(d.getHours() - 4);
+      return d;
+    }
+
+    function formatTime(dateValue) {
+      return timeFormatter.format(subtractFourHours(dateValue));
+    }
+
+    function lightLabel(v) {
+      return Number(v) === 1 ? "Dark" : "Light Detected";
+    }
+
+    function obstacleLabel(v) {
+      return Number(v) === 0 ? "Obstacle Detected" : "Clear";
+    }
+
+    function renderLatest(data) {
+      document.getElementById("temp").textContent = `${data.temperature} °C`;
+      document.getElementById("hum").textContent = `${data.humidity} %`;
+      document.getElementById("light").textContent = data.light;
+      document.getElementById("obstacle").textContent = data.obstacle;
+      document.getElementById("pot").textContent = data.potentiometer;
+
+      document.getElementById("lightBadge").textContent = lightLabel(data.light);
+      document.getElementById("obstacleBadge").textContent = obstacleLabel(data.obstacle);
+      document.getElementById("lastUpdated").textContent = formatTime(data.timestamp);
+    }
+
+    function buildTempChart(data) {
+      const labels = data.map(item => formatTime(item.timestamp));
+      const temps = data.map(item => item.temperature);
+
+      if (tempChart) tempChart.destroy();
+
+      const minTemp = Math.min(...temps);
+      const maxTemp = Math.max(...temps);
+
+      tempChart = new Chart(document.getElementById("tempChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Temperature (°C)",
+            data: temps,
+            tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 3,
+            borderColor: "#ef4444",
+            backgroundColor: "rgba(239, 68, 68, 0.15)",
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#475569"
+              }
+            },
+            tooltip: {
+              backgroundColor: "#172554",
+              titleColor: "#ffffff",
+              bodyColor: "#ffffff",
+              padding: 12,
+              cornerRadius: 10
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#6b7280" },
+              grid: { color: "rgba(100,116,139,0.12)" }
+            },
+            y: {
+              min: Math.floor((minTemp - 0.2) * 10) / 10,
+              max: Math.ceil((maxTemp + 0.2) * 10) / 10,
+              ticks: { color: "#6b7280" },
+              grid: { color: "rgba(100,116,139,0.12)" }
+            }
+          }
+        }
+      });
+
+      document.getElementById("tempRangeNote").textContent =
+        `Min ${minTemp.toFixed(1)} °C · Max ${maxTemp.toFixed(1)} °C`;
+    }
+
+    function buildHumChart(data) {
+      const labels = data.map(item => formatTime(item.timestamp));
+      const hums = data.map(item => item.humidity);
+
+      if (humChart) humChart.destroy();
+
+      const minHum = Math.min(...hums);
+      const maxHum = Math.max(...hums);
+
+      humChart = new Chart(document.getElementById("humChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Humidity (%)",
+            data: hums,
+            tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 3,
+            borderColor: "#3b82f6",
+            backgroundColor: "rgba(59, 130, 246, 0.15)",
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#475569"
+              }
+            },
+            tooltip: {
+              backgroundColor: "#172554",
+              titleColor: "#ffffff",
+              bodyColor: "#ffffff",
+              padding: 12,
+              cornerRadius: 10
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#6b7280" },
+              grid: { color: "rgba(100,116,139,0.12)" }
+            },
+            y: {
+              min: Math.floor((minHum - 0.2) * 10) / 10,
+              max: Math.ceil((maxHum + 0.2) * 10) / 10,
+              ticks: { color: "#6b7280" },
+              grid: { color: "rgba(100,116,139,0.12)" }
+            }
+          }
+        }
+      });
+
+      document.getElementById("humRangeNote").textContent =
+        `Min ${minHum.toFixed(1)} % · Max ${maxHum.toFixed(1)} %`;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("recentTableBody");
+      tbody.innerHTML = "";
+
+      [...data].reverse().forEach((item, index) => {
+        const lightClass = Number(item.light) === 1 ? "status-light-off" : "status-light-on";
+        const obstacleClass = Number(item.obstacle) === 0 ? "status-obs-detected" : "status-obs-clear";
+
+        const row = document.createElement("tr");
+        if (index === 0) {
+          row.classList.add("latest-row");
+        }
+
+        row.innerHTML = `
+          <td>${formatTime(item.timestamp)}</td>
+          <td>${item.temperature}</td>
+          <td>${item.humidity}</td>
+          <td><span class="status-pill ${lightClass}">${item.light} (${lightLabel(item.light)})</span></td>
+          <td><span class="status-pill ${obstacleClass}">${item.obstacle} (${obstacleLabel(item.obstacle)})</span></td>
+          <td>${item.potentiometer}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function refreshDashboard() {
+      try {
+        const limit = document.getElementById("recordLimit").value;
+
+        const latestRes = await fetch("/readings/latest");
+        const latestData = await latestRes.json();
+
+        const recentRes = await fetch(`/readings/recent?limit=${limit}`);
+        const recentData = await recentRes.json();
+
+        renderLatest(latestData);
+        buildTempChart(recentData);
+        buildHumChart(recentData);
+        renderTable(recentData.slice(-10));
+      } catch (error) {
+        console.error("Dashboard update failed:", error);
+      }
+    }
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      const interval = Number(document.getElementById("refreshInterval").value);
+      refreshTimer = setInterval(refreshDashboard, interval);
+    }
+
+    function stopAutoRefresh() {
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    }
+
+    function updateAutoRefreshUI() {
+      const toggle = document.getElementById("autoRefreshToggle");
+      const text = document.getElementById("autoRefreshText");
+
+      if (autoRefreshEnabled) {
+        toggle.classList.add("active");
+        text.textContent = "ON";
+        startAutoRefresh();
+      } else {
+        toggle.classList.remove("active");
+        text.textContent = "OFF";
+        stopAutoRefresh();
+      }
+    }
+
+    document.getElementById("autoRefreshToggle").addEventListener("click", () => {
+      autoRefreshEnabled = !autoRefreshEnabled;
+      updateAutoRefreshUI();
+    });
+
+    document.getElementById("refreshInterval").addEventListener("change", () => {
+      if (autoRefreshEnabled) {
+        startAutoRefresh();
+      }
+    });
+
+    document.getElementById("recordLimit").addEventListener("change", refreshDashboard);
+    document.getElementById("refreshButton").addEventListener("click", refreshDashboard);
+
+    refreshDashboard();
+    updateAutoRefreshUI();
+  </script>
+</body>
+</html>
