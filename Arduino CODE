@@ -6,9 +6,9 @@
 #define OBSTACLE_PIN 33
 
 const char* ssid = "iPhone";
-const char* password = "19711217";
+const char* password = "";
 const char* serverUrl = "http://172.20.10.2:8000/readings";
-const char* apiToken = "my-secret-token";
+const char* apiToken = "";
 
 float temperature = 25.0;
 float humidity = 60.0;
@@ -102,5 +102,5 @@ void loop() {
     http.end();
   }
 
-  delay(10000);
+  delay(1000);
 }
