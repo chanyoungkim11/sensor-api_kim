@@ -3,14 +3,33 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from datetime import datetime
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_TOKEN = os.getenv("API_TOKEN")
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME")
+COLLECTION_NAME = os.getenv("COLLECTION_NAME")
+
+if not API_TOKEN:
+    raise RuntimeError("API_TOKEN is missing in .env")
+
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI is missing in .env")
+
+if not DB_NAME:
+    raise RuntimeError("DB_NAME is missing in .env")
+
+if not COLLECTION_NAME:
+    raise RuntimeError("COLLECTION_NAME is missing in .env")
 
 app = FastAPI()
 
-API_TOKEN = "my-secret-token"
-
-client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
-db = client["sensor_to_web_iot"]
-collection = db["readings"]
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+db = client[DB_NAME]
+collection = db[COLLECTION_NAME]
 
 class SensorData(BaseModel):
     sensor_id: str
